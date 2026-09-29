@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# --- Ambiente virtual ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.swp
+*~
+
+# --- Sistema operacional ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Arquivos temporários do projeto ---
+resultados/_teste_*.csv
+
+# NOTA: a pasta resultados/ NÃO é ignorada de propósito.
+# Ela guarda as execuções manuais do usuário, que não podem ser
+# regeradas por script — são o registro da "decisão humana" exigida
+# pelo item 2.4.3 do edital. Os gráficos e capturas também ficam
+# versionados, porque entram no relatório.
