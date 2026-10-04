@@ -1,33 +1,13 @@
-"""
-Tipos de foco de dengue e o conteúdo educacional de cada um.
-
-Atende ao item 2.4.4 do edital ("mensagem educativa relacionada ao
-elemento encontrado") e à Seção 6 do relatório, que pede os tipos de
-foco utilizados no ambiente e a informação educativa de CADA UM deles.
-
-Os tipos aqui foram escolhidos entre os criadouros listados no item 2.2:
-pneus, vasos e pratos de plantas, garrafas, baldes, recipientes
-destampados, caixas-d'água mal fechadas e calhas.
-
-ATENÇÃO — Seção 6 do relatório
-------------------------------
-A grade de avaliação exige "uso de fontes confiáveis". As orientações
-abaixo seguem as recomendações usuais de prevenção, mas as REFERÊNCIAS
-ainda precisam ser levantadas e citadas em ABNT (Ministério da Saúde,
-Fiocruz ou secretaria estadual/municipal de saúde).
-"""
-
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class TipoFoco:
-    """Um criadouro possível do Aedes aegypti."""
 
-    codigo: str        # caractere usado nos mapas
-    nome: str          # nome exibido na interface
-    dica: str          # rótulo curto para os botões de seleção
-    mensagem: str      # orientação educativa mostrada ao alcançar o foco
+    codigo: str
+    nome: str
+    dica: str
+    mensagem: str
 
 
 PNEU = TipoFoco(

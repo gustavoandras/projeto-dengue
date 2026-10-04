@@ -1,12 +1,3 @@
-"""
-Componentes de interface clicáveis.
-
-Modo imediato: a cada quadro o jogo cria os botões já com suas posições,
-desenha e guarda a lista. O tratamento do clique consulta essa mesma
-lista. Não há estado escondido — o que está na tela é exatamente o que
-responde ao mouse.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -18,22 +9,19 @@ from . import tema
 
 @dataclass
 class Botao:
-    """Um botão retangular com rótulo."""
 
     identificador: tuple
     rotulo: str
     rect: pygame.Rect
     ativo: bool = False
     habilitado: bool = True
-    estilo: str = "normal"          # normal | principal | sutil
+    estilo: str = "normal"
     sublegenda: str | None = None
-    marca: str | None = None        # tecla de atalho mostrada à direita
+    marca: str | None = None
     _hover: bool = field(default=False, repr=False)
 
     def contem(self, posicao) -> bool:
         return self.habilitado and self.rect.collidepoint(posicao)
-
-    # -- desenho -----------------------------------------------------------
 
     def desenhar(self, tela: pygame.Surface, fontes) -> None:
         fundo, borda, cor_texto = self._cores()
@@ -66,7 +54,7 @@ class Botao:
 
         if self.marca:
             marca = fontes.pequena.render(self.marca, True, tema.TEXTO_FRACO)
-            # só mostra o atalho se não for encostar no rótulo
+
             espaco_livre = (
                 self.rect.width - 21 - texto.get_width() - marca.get_width()
             )
@@ -90,7 +78,6 @@ class Botao:
 
 
 class ColecaoBotoes:
-    """Lista de botões do quadro atual."""
 
     def __init__(self):
         self.itens: list[Botao] = []

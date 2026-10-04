@@ -1,17 +1,3 @@
-"""
-Análise de um cenário candidato — ferramenta de desenvolvimento.
-
-Roda os quatro algoritmos num mapa e informa se ele é bom para o estudo:
-
-  * o caminho de menor nº de passos tem custo maior que o de menor custo?
-    (exigência do item 2.5 para o Cenário 3)
-  * os quatro algoritmos produzem resultados DIFERENTES entre si?
-    (exigência das observações finais: "permitir comparação efetiva")
-
-Uso:  python -m ferramentas.analisar_cenario            (analisa os 3 oficiais)
-      python -m ferramentas.analisar_cenario arquivo.txt
-"""
-
 from __future__ import annotations
 
 import sys
@@ -19,13 +5,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core import cenarios  # noqa: E402
-from core.grade import Grade  # noqa: E402
-from ferramentas.validar_cenarios import (  # noqa: E402
+from core import cenarios
+from core.grade import Grade
+from ferramentas.validar_cenarios import (
     caminho_minimo_em_custo,
     caminho_minimo_em_passos,
 )
-from search import ALGORITMOS  # noqa: E402
+from search import ALGORITMOS
 
 
 def analisar(grade: Grade, titulo: str) -> dict:

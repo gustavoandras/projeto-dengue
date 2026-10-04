@@ -1,33 +1,3 @@
-"""
-Sensibilidade dos algoritmos à ordem de geração dos vizinhos.
-
-A ordem em que a função sucessor gera os vizinhos (core/grade.py, ACOES)
-é um detalhe de implementação arbitrário. Esta ferramenta mede o quanto
-cada algoritmo depende dela, executando as 24 permutações possíveis de
-(Cima, Direita, Baixo, Esquerda) sem alterar nada no mapa.
-
-Para que serve
---------------
-1. Responder a pergunta 4 do item 2.9 ("A DFS apresentou algum
-   comportamento desfavorável?") com evidência, e não com opinião.
-
-2. Servir de VERIFICAÇÃO DE CORRETUDE. O resultado esperado é:
-
-     A*     custo constante  — a otimalidade não pode depender da ordem;
-                               variação aqui indicaria heurística
-                               inadmissível ou erro na fila de prioridade
-     BFS    passos constante — ela garante o menor nº de passos;
-                               variação aqui indicaria erro na fila FIFO
-     BFS    custo variável   — ESPERADO: entre os caminhos de menor nº de
-                               passos, ela não tem critério de custo
-     Gulosa variável         — ESPERADO: a ordem desempata h iguais
-     DFS    muito variável   — ESPERADO: sem critério algum, a ordem
-                               passa a ser o critério
-
-Uso:  python -m ferramentas.sensibilidade_ordem
-      python -m ferramentas.sensibilidade_ordem 2    (só o cenário 2)
-"""
-
 from __future__ import annotations
 
 import itertools
@@ -36,9 +6,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core import cenarios  # noqa: E402
-from core import grade as mod_grade  # noqa: E402
-from search import ALGORITMOS  # noqa: E402
+from core import cenarios
+from core import grade as mod_grade
+from search import ALGORITMOS
 
 
 def medir(cenario) -> dict:
@@ -90,7 +60,6 @@ def imprimir(cenario) -> None:
         print(f"{nome:<15}{f_passos:>16}{f_custo:>16}"
               f"{len(d['caminhos']):>22}")
 
-    # Verificações de corretude
     print()
     problemas = []
     if len(set(dados["A*"]["custo"])) != 1:

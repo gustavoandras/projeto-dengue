@@ -1,27 +1,3 @@
-"""
-Gráficos dos experimentos (item 2.8: "os resultados deverão ser
-apresentados por meio de tabelas e gráficos").
-
-Lê resultados/experimentos_completo.csv e gera um PNG por métrica, em
-300 dpi, prontos para entrar no relatório.
-
-Decisões de visualização
-------------------------
-* Uma métrica por figura. Nunca dois eixos y no mesmo gráfico: passos e
-  custo têm escalas e significados diferentes, e sobrepô-los num eixo
-  duplo induz comparações falsas.
-* Valor escrito em cima de cada barra. Além de facilitar a leitura, é o
-  que garante que a figura continue legível impressa em preto e branco,
-  já que a cor deixa de distinguir as séries.
-* O tempo de busca leva barra de erro com o desvio padrão das
-  repetições, para deixar explícito que é média e não medição única.
-* O usuário aparece só em passos e custo. Estados expandidos, gerados e
-  fronteira são conceitos internos de uma busca: quem joga não expande
-  estados nem mantém fronteira.
-
-Uso:  python -m experimentos.graficos
-"""
-
 from __future__ import annotations
 
 import csv
@@ -31,15 +7,15 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-import matplotlib  # noqa: E402
+import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
 ENTRADA = RAIZ / "resultados" / "experimentos_completo.csv"
 DESTINO = RAIZ / "resultados" / "graficos"
 
-# Paleta categórica validada para daltonismo e para o fundo branco.
+
 COR = {
     "Usuário": "#e87ba4",
     "BFS": "#2a78d6",
@@ -109,8 +85,7 @@ def grafico(linhas, coluna, titulo, rotulo_y, arquivo,
             yerr=erros if desvio and any(erros) else None,
             error_kw={"ecolor": TINTA_FRACA, "elinewidth": 1, "capsize": 3},
         )
-        # valor em cima de cada barra: legibilidade e impressão em P&B.
-        # O rótulo sobe acima da barra de erro para não se sobrepor a ela.
+
         for barra, valor, erro in zip(barras, valores, erros):
             eixos.annotate(
                 formato.format(valor),
@@ -166,10 +141,6 @@ def main() -> None:
 
     somente_algoritmos = [l for l in linhas if l["metodo"] != "Usuário"]
 
-    # Os gráficos abaixo não têm a série do usuário, e isso é proposital:
-    # são métricas do funcionamento interno de uma busca. A nota de rodapé
-    # existe para que o leitor do relatório não interprete como dado que
-    # faltou coletar.
     nota_interna = (
         "Métrica interna da busca: o usuário não expande estados nem "
         "mantém fronteira, portanto não há valor a comparar."
@@ -203,7 +174,6 @@ def main() -> None:
               "algoritmos.")
         print("   Jogue o main.py uma vez em cada cenário e rode de novo:")
         print("   python -m experimentos.tudo")
-
 
 if __name__ == "__main__":
     main()

@@ -1,18 +1,3 @@
-"""
-Estado do participante humano (item 2.4.1 do edital).
-
-A cada movimento o sistema deve:
-  - atualizar a posição;
-  - impedir movimentos inválidos (fora da matriz);
-  - impedir passagem por obstáculos;
-  - registrar o caminho percorrido;
-  - acumular o custo do deslocamento;
-  - contabilizar a quantidade de passos;
-  - registrar o tempo necessário para alcançar o objetivo.
-
-Este módulo faz exatamente isso e nada de desenho.
-"""
-
 from __future__ import annotations
 
 from time import perf_counter
@@ -21,7 +6,6 @@ from core.grade import ACOES, Estado, Grade
 
 
 class Jogador:
-    """O personagem controlado manualmente pelo usuário."""
 
     def __init__(self, grade: Grade):
         self.grade = grade
@@ -33,16 +17,12 @@ class Jogador:
         self._inicio_relogio: float | None = None
         self._tempo_final: float | None = None
 
-    # -- ciclo de vida -----------------------------------------------------
-
     def iniciar_cronometro(self) -> None:
-        """Chamado quando a missão começa, para ambos ao mesmo tempo."""
         self._inicio_relogio = perf_counter()
         self._tempo_final = None
 
     @property
     def tempo(self) -> float:
-        """Segundos desde o início da missão (congela ao alcançar o foco)."""
         if self._inicio_relogio is None:
             return 0.0
         if self._tempo_final is not None:
@@ -53,15 +33,7 @@ class Jogador:
     def chegou(self) -> bool:
         return self.grade.eh_objetivo(self.posicao)
 
-    # -- movimentação ------------------------------------------------------
-
     def mover(self, delta_linha: int, delta_coluna: int) -> bool:
-        """
-        Tenta mover o jogador. Devolve True se o movimento aconteceu.
-
-        Movimentos que saiam da matriz ou entrem em obstáculo são
-        recusados: a posição não muda e nada é contabilizado.
-        """
         if self.chegou:
             return False
 
@@ -89,8 +61,6 @@ class Jogador:
             if nome == nome_acao:
                 return self.mover(dl, dc)
         raise ValueError(f"Ação desconhecida: {nome_acao!r}")
-
-    # -- relatório ---------------------------------------------------------
 
     def resumo(self) -> dict:
         return {

@@ -1,31 +1,3 @@
-"""
-Execução dos experimentos obrigatórios (item 2.8 do edital).
-
-    Cada cenário deve ser executado pelo usuário e pelos quatro
-    algoritmos: 3 execuções humanas + 12 algorítmicas = 15 no total.
-
-Este script roda as 12 ALGORÍTMICAS. As 3 manuais só você pode fazer,
-jogando o `main.py` uma vez em cada cenário — elas são gravadas em
-resultados/execucoes_usuario.csv e este script as incorpora quando
-encontra o arquivo.
-
-Medição de tempo
-----------------
-Uma busca num grid de 20x15 leva dezenas de microssegundos. Cronometrar
-uma execução só produziria ruído puro: o A* poderia aparecer "mais
-rápido" que a DFS por acaso de agendamento do sistema operacional.
-
-Por isso cada busca é repetida N vezes (padrão: 1000) e o tempo
-reportado é a MÉDIA. O desvio padrão também é gravado, para que dê para
-mostrar no relatório que a medição é estável.
-
-As métricas estruturais (passos, custo, expandidos, gerados, fronteira)
-são determinísticas: repetir não muda nada. Só o tempo precisa de média.
-
-Uso:  python -m experimentos.executar
-      python -m experimentos.executar --repeticoes 5000
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -38,9 +10,9 @@ from time import perf_counter
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
-from core import cenarios  # noqa: E402
-from search import ALGORITMOS  # noqa: E402
-from search.resultado import validar_caminho  # noqa: E402
+from core import cenarios
+from search import ALGORITMOS
+from search.resultado import validar_caminho
 
 DESTINO = RAIZ / "resultados"
 ARQUIVO_ALGORITMOS = DESTINO / "experimentos_algoritmos.csv"
@@ -56,7 +28,6 @@ COLUNAS = [
 
 
 def medir_tempo(buscar, grade, repeticoes: int) -> tuple[float, float]:
-    """Devolve (média, desvio padrão) do tempo de busca, em milissegundos."""
     amostras = []
     for _ in range(repeticoes):
         inicio = perf_counter()
@@ -108,15 +79,6 @@ def executar_algoritmos(repeticoes: int) -> list[dict]:
 
 
 def carregar_usuario() -> tuple[list[dict], list[str]]:
-    """
-    Lê as execuções manuais, se o arquivo existir.
-
-    Só entram as execuções feitas no FOCO PADRÃO do cenário. Uma partida
-    jogada em outro foco resolve uma instância diferente do problema:
-    comparar os passos dela com os dos algoritmos, que perseguiram o foco
-    padrão, produziria uma tabela sem sentido. Essas linhas são separadas
-    e avisadas em vez de silenciosamente misturadas.
-    """
     if not ARQUIVO_USUARIO.exists():
         return [], []
     linhas, descartadas = [], []
@@ -140,8 +102,7 @@ def carregar_usuario() -> tuple[list[dict], list[str]]:
                 "metodo": "Usuário",
                 "passos": registro["passos"],
                 "custo": registro["custo"],
-                # tempo do usuário é tempo REAL de jogo, em segundos;
-                # não é comparável ao tempo de execução do algoritmo
+
                 "tempo_ms": f"{float(registro['tempo_s']) * 1000:.1f}",
                 "desvio_ms": "",
                 "expandidos": "",
@@ -161,7 +122,6 @@ def gravar(caminho: Path, linhas: list[dict]) -> None:
 
 
 def gerar_tabela(linhas: list[dict]) -> str:
-    """Tabela em Markdown, no formato do Apêndice A do edital."""
     partes = [
         "# Experimentos realizados",
         "",

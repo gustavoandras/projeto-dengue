@@ -1,13 +1,3 @@
-"""
-Compara visualmente os caminhos dos quatro algoritmos num cenário.
-
-Gera uma imagem 2x2 com o caminho encontrado por cada algoritmo, útil
-tanto para conferir o comportamento quanto para ilustrar o relatório.
-
-Uso:  python -m ferramentas.comparar_caminhos        (todos os cenários)
-      python -m ferramentas.comparar_caminhos 3      (só o cenário 3)
-"""
-
 from __future__ import annotations
 
 import os
@@ -20,12 +10,12 @@ sys.path.insert(0, str(RAIZ))
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
-import pygame  # noqa: E402
+import pygame
 
-from core import cenarios  # noqa: E402
-from jogo import tema  # noqa: E402
-from jogo.render import DesenhistaGrade  # noqa: E402
-from search import ALGORITMOS  # noqa: E402
+from core import cenarios
+from jogo import tema
+from jogo.render import DesenhistaGrade
+from search import ALGORITMOS
 
 DESTINO = RAIZ / "resultados" / "capturas"
 

@@ -1,24 +1,3 @@
-"""
-Estrutura comum devolvida por todos os algoritmos de busca.
-
-A existência deste módulo é o que permite comparar os quatro algoritmos
-na mesma tabela: todos preenchem exatamente os mesmos campos, com as
-mesmas definições.
-
-Definição das métricas (usada igualmente nos 4 algoritmos)
-----------------------------------------------------------
-gerados     sucessores criados, INCLUINDO os descartados por já terem
-            sido visitados ou por já estarem na fronteira.
-expandidos  nós retirados da fronteira e cujos sucessores foram gerados.
-            O nó objetivo conta como expandido quando é retirado.
-fronteira_maxima  maior tamanho que a fronteira atingiu durante a busca.
-
-Separação de tempos (item 2.4.3 do edital)
-------------------------------------------
-`tempo_busca` mede SOMENTE a execução do algoritmo. O tempo de animação
-do agente na tela é medido à parte, pela interface, e nunca entra aqui.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -28,7 +7,6 @@ from core.grade import Estado, Grade
 
 @dataclass
 class Resultado:
-    """Saída de uma execução de busca."""
 
     algoritmo: str
     encontrou: bool
@@ -37,14 +15,12 @@ class Resultado:
     expandidos: int = 0
     gerados: int = 0
     fronteira_maxima: int = 0
-    tempo_busca: float = 0.0          # segundos
-    # Ordem em que os estados foram expandidos. A interface usa esta lista
-    # para animar a exploração — ela não influencia a busca em nada.
+    tempo_busca: float = 0.0
+
     ordem_exploracao: list[Estado] = field(default_factory=list)
 
     @property
     def passos(self) -> int:
-        """Número de movimentos (o estado inicial não é um passo)."""
         return max(0, len(self.caminho) - 1)
 
     def __str__(self) -> str:
@@ -61,7 +37,6 @@ class Resultado:
 def reconstruir_caminho(
     anterior: dict[Estado, Estado | None], destino: Estado
 ) -> list[Estado]:
-    """Percorre os ponteiros de pai do objetivo até a origem e inverte."""
     caminho: list[Estado] = []
     no: Estado | None = destino
     while no is not None:
@@ -72,12 +47,6 @@ def reconstruir_caminho(
 
 
 def validar_caminho(grade: Grade, caminho: list[Estado]) -> None:
-    """
-    Confere que o caminho é realmente percorrível.
-
-    Usado nos testes: garante que nenhum algoritmo "teletransportou" o
-    agente ou atravessou um obstáculo.
-    """
     if not caminho:
         raise ValueError("caminho vazio")
     if caminho[0] != grade.inicio:

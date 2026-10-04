@@ -1,26 +1,3 @@
-"""
-Agente de Combate à Dengue — jogo completo.
-
-Projeto nº 1 · Inteligência Artificial · BCC · UTFPR-PG
-
-Fluxo
------
-  SELECAO    escolha do cenário, do foco e do algoritmo; INICIAR começa
-  MISSAO     usuário e agente atuam SIMULTANEAMENTE no mesmo cenário
-  RESULTADO  mensagem educativa + comparação entre usuário e agente
-
-A missão permanece ativa até que AMBOS tenham alcançado o foco, mesmo
-que um chegue antes (item 2.4.3 do edital).
-
-Tudo é clicável; as teclas continuam funcionando como atalho.
-
-  clique         botões do painel e focos no mapa
-  1 2 3          cenário            B D G A   algoritmo do agente
-  ENTER          iniciar missão     setas     mover seu personagem
-  TAB            pular animação     R         reiniciar
-  F11            tela cheia         ESC       voltar / sair
-"""
-
 from __future__ import annotations
 
 import csv
@@ -39,15 +16,15 @@ MODO_CAPTURA = "--capturas" in sys.argv
 if MODO_CAPTURA:
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-import pygame  # noqa: E402
+import pygame
 
-from core import celulas, cenarios  # noqa: E402
-from jogo import tema  # noqa: E402
-from jogo.animacao import AnimacaoAgente  # noqa: E402
-from jogo.jogador import Jogador  # noqa: E402
-from jogo.render import TAM_LOGICO, DesenhistaGrade  # noqa: E402
-from jogo.ui import Botao, ColecaoBotoes  # noqa: E402
-from search import ALGORITMOS  # noqa: E402
+from core import celulas, cenarios
+from jogo import tema
+from jogo.animacao import AnimacaoAgente
+from jogo.jogador import Jogador
+from jogo.render import TAM_LOGICO, DesenhistaGrade
+from jogo.ui import Botao, ColecaoBotoes
+from search import ALGORITMOS
 
 ARQUIVO_EXECUCOES = RAIZ / "resultados" / "execucoes_usuario.csv"
 
@@ -71,23 +48,11 @@ TECLAS_MOVIMENTO = {
 
 
 def ativar_consciencia_dpi() -> None:
-    """
-    Avisa o sistema operacional que a aplicação cuida da própria escala.
-
-    Sem isto, no Windows com escala de tela em 125% ou 150% (o padrão em
-    notebooks modernos), o sistema desenha a janela num tamanho menor e
-    depois AMPLIA a imagem inteira. O resultado é texto borrado, como se
-    estivesse fora de foco. Com a chamada abaixo, a janela recebe os
-    pixels reais do monitor e o texto sai nítido.
-
-    Precisa ser executado antes de abrir a janela. Em Linux e macOS não
-    é necessário e a função simplesmente não faz nada.
-    """
     if sys.platform != "win32":
         return
     import ctypes
     try:
-        # 2 = PROCESS_PER_MONITOR_DPI_AWARE (Windows 8.1+)
+
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
     except (AttributeError, OSError):
         try:
@@ -103,11 +68,10 @@ class Estado(Enum):
 
 
 class Fontes:
-    """Fontes redimensionadas conforme a altura da janela."""
 
     def __init__(self, altura_janela: int):
         pygame.font.init()
-        # em telas grandes o texto acompanha; o limite evita exageros
+
         escala = max(0.90, min(1.9, altura_janela / 720))
         def tamanho(base):
             return max(10, int(base * escala))
@@ -153,10 +117,6 @@ class Jogo:
         self._ao_redimensionar(tamanho)
         self._montar_cenario()
 
-    # =====================================================================
-    # Janela e layout
-    # =====================================================================
-
     def _ao_redimensionar(self, tamanho) -> None:
         self.largura, self.altura = tamanho
         self.fontes = Fontes(self.altura)
@@ -187,9 +147,6 @@ class Jogo:
         )
         largura_grade = largura_util // 2
 
-        # O tamanho da célula é limitado pela largura OU pela altura — o que
-        # for menor — e arredondado para um múltiplo de TAM_LOGICO, para que
-        # a arte seja ampliada por fator inteiro (ver jogo/render.py).
         bruto = min(
             largura_grade // self.grade.colunas,
             altura_disponivel // self.grade.linhas,
@@ -200,9 +157,6 @@ class Jogo:
         largura_grades = lado * self.grade.colunas
         altura_grades = lado * self.grade.linhas
 
-        # As duas grades são posicionadas ENCOSTADAS uma na outra e o par é
-        # centrado. Antes cada uma era centrada na própria metade, o que
-        # abria um vão entre elas em mapas com poucas colunas.
         conjunto = 2 * largura_grades + tema.ESPACO_ENTRE_GRADES
         x0 = margem + max(
             0, (largura_util + tema.ESPACO_ENTRE_GRADES - conjunto) // 2
@@ -213,8 +167,7 @@ class Jogo:
             min(sobra - margem, tema.FAIXA_MAXIMA)
             if sobra > tema.FAIXA_MINIMA else 0
         )
-        # o que continuar sobrando vira respiro acima e abaixo do conjunto,
-        # para o bloco todo ficar centrado em vez de colado no topo
+
         respiro = max(0, sobra - altura_faixa - (margem if altura_faixa else 0))
         topo += respiro // 2
 
@@ -234,10 +187,6 @@ class Jogo:
         self.desenhista_usuario = DesenhistaGrade(self.grade, area_usuario)
         self.desenhista_agente = DesenhistaGrade(self.grade, area_agente)
 
-    # =====================================================================
-    # Preparação
-    # =====================================================================
-
     def _montar_cenario(self, codigo_foco: str | None = None) -> None:
         self.cenario = cenarios.CENARIOS[self.indice_cenario]
         self.grade = self.cenario.criar_grade(codigo_foco)
@@ -252,22 +201,12 @@ class Jogo:
         self.grade.definir_objetivo(posicao)
 
     def _iniciar_missao(self) -> None:
-        """
-        Roda a busca AGORA, de uma vez só, e cronometra apenas ela.
-
-        A animação que vem depois não entra nessa medição — é isso que o
-        item 2.4.3 do edital exige.
-        """
         self.jogador = Jogador(self.grade)
         self.resultado_busca = ALGORITMOS[self.algoritmo](self.grade)
         self.agente = AnimacaoAgente(self.resultado_busca, self.grade)
         self.ordem_chegada = []
         self.jogador.iniciar_cronometro()
         self.estado = Estado.MISSAO
-
-    # =====================================================================
-    # Registro da execução manual (item 2.4.3: uma por cenário)
-    # =====================================================================
 
     def _carregar_cenarios_registrados(self) -> set[tuple[int, str]]:
         if not ARQUIVO_EXECUCOES.exists():
@@ -288,7 +227,6 @@ class Jogo:
         return (self.cenario.numero, self.grade.tipo_do_objetivo.codigo)
 
     def _registrar_execucao_usuario(self) -> None:
-        """Grava a execução manual. Só a PRIMEIRA de cada par conta."""
         if self._chave_execucao in self.ja_registrados or self.jogador is None:
             return
 
@@ -314,10 +252,6 @@ class Jogo:
                 " ".join(f"{l},{c}" for l, c in resumo["caminho"]),
             ])
         self.ja_registrados.add(self._chave_execucao)
-
-    # =====================================================================
-    # Eventos
-    # =====================================================================
 
     def tratar_evento(self, evento) -> bool:
         if evento.type == pygame.QUIT:
@@ -351,7 +285,6 @@ class Jogo:
         if identificador is not None:
             return self._executar_acao(identificador)
 
-        # clique direto num foco do mapa, durante a seleção
         if self.estado is Estado.SELECAO:
             for desenhista in (self.desenhista_usuario, self.desenhista_agente):
                 celula = desenhista.celula_em(posicao)
@@ -375,7 +308,7 @@ class Jogo:
         elif acao == "pular" and self.agente:
             self.agente.concluir_imediatamente()
         elif acao == "repetir":
-            # mesma instância: mesmo cenário, mesmo foco, mesmo algoritmo
+
             self._montar_cenario(self.grade.tipo_do_objetivo.codigo)
             self._iniciar_missao()
         elif acao == "reiniciar":
@@ -423,10 +356,6 @@ class Jogo:
         atual = posicoes.index(self.grade.objetivo)
         self._selecionar_foco(posicoes[(atual + 1) % len(posicoes)])
 
-    # =====================================================================
-    # Atualização
-    # =====================================================================
-
     def atualizar(self, dt: float) -> None:
         if self.estado is not Estado.MISSAO:
             return
@@ -434,19 +363,15 @@ class Jogo:
             self.agente.atualizar(dt)
 
         if self.jogador and self.agente:
-            # registra quem alcançou o foco primeiro (item 2.7)
+
             if self.jogador.chegou and "Você" not in self.ordem_chegada:
                 self.ordem_chegada.append("Você")
             if self.agente.chegou and "Agente" not in self.ordem_chegada:
                 self.ordem_chegada.append("Agente")
-            # a missão só termina quando AMBOS chegaram
+
             if self.jogador.chegou and self.agente.chegou:
                 self._registrar_execucao_usuario()
                 self.estado = Estado.RESULTADO
-
-    # =====================================================================
-    # Desenho
-    # =====================================================================
 
     def desenhar(self) -> None:
         self.botoes.limpar()
@@ -476,9 +401,7 @@ class Jogo:
             f"{self.cenario.nivel}  ·  {self.grade.linhas}x{self.grade.colunas}"
             f"  ·  objetivo: {self.grade.tipo_do_objetivo.nome}"
         )
-        # a folga vem da altura REAL do título: como a fonte escala com a
-        # janela, uma distância fixa faria as duas linhas se encostarem em
-        # telas grandes
+
         self.tela.blit(
             self.fontes.pequena.render(sub, True, tema.TEXTO_DESTAQUE),
             (tema.MARGEM, tema.MARGEM + titulo.get_height() + tema.FOLGA_SUBTITULO),
@@ -546,16 +469,7 @@ class Jogo:
         posicao = self.agente.posicao if self.agente else self.grade.inicio
         d.desenhar_personagem(self.tela, *posicao, "agente")
 
-    # -- faixa inferior ----------------------------------------------------
-
     def _desenhar_faixa_inferior(self) -> None:
-        """
-        Ocupa a altura que sobra em telas largas.
-
-        Na seleção explica o cenário e o foco escolhido; durante a missão
-        mostra a comparação lado a lado em tipo grande, que é o que o item
-        2.7 pede que fique visível enquanto os dois atuam.
-        """
         faixa = self.area_faixa
         if faixa is None:
             return
@@ -649,8 +563,6 @@ class Jogo:
             (faixa.x + metade, faixa.y + 12),
             (faixa.x + metade, faixa.bottom - 12),
         )
-
-    # -- painel ------------------------------------------------------------
 
     def _desenhar_painel(self) -> None:
         pygame.draw.rect(self.tela, tema.FUNDO_PAINEL, self.area_painel,
@@ -812,8 +724,6 @@ class Jogo:
             )
             y += 18
 
-    # -- conclusão ---------------------------------------------------------
-
     def _desenhar_conclusao(self) -> None:
         veu = pygame.Surface((self.largura, self.altura), pygame.SRCALPHA)
         veu.fill((10, 13, 20, 210))
@@ -928,8 +838,6 @@ class Jogo:
             pygame.Rect(x + meio + 10, base, meio, 38), marca="ESC",
         ))
 
-    # -- utilitários de desenho -------------------------------------------
-
     def _secao(self, x, y, titulo) -> int:
         self.tela.blit(
             self.fontes.rotulo.render(titulo, True, tema.TEXTO_DESTAQUE), (x, y)
@@ -977,8 +885,6 @@ class Jogo:
             (tema.MARGEM, self.altura - tema.MARGEM - 12),
         )
 
-    # =====================================================================
-
     def executar(self) -> None:
         rodando = True
         while rodando:
@@ -992,7 +898,6 @@ class Jogo:
             self.desenhar()
             pygame.display.flip()
         pygame.quit()
-
 
 if __name__ == "__main__":
     Jogo().executar()

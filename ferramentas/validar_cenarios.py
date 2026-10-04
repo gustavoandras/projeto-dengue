@@ -1,22 +1,3 @@
-"""
-Validação dos cenários — ferramenta de desenvolvimento.
-
-Confere, para cada cenário:
-  1. o mapa é retangular;
-  2. existe exatamente um 'S' e um 'F';
-  3. o foco é alcançável a partir da posição inicial;
-  4. (cenário 3) o caminho de MENOR NÚMERO DE PASSOS não é o de MENOR CUSTO.
-
-IMPORTANTE
-----------
-As buscas usadas aqui são apenas uma inundação (flood fill) e um Dijkstra
-de conferência, escritos para VALIDAR OS MAPAS. Não são os algoritmos
-entregues no projeto — esses ficam em search/ e são implementados à parte,
-conforme pede o edital.
-
-Uso:  python -m ferramentas.validar_cenarios
-"""
-
 import heapq
 import sys
 from collections import deque
@@ -24,12 +5,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core import cenarios  # noqa: E402
-from core.grade import Estado, Grade  # noqa: E402
+from core import cenarios
+from core.grade import Estado, Grade
 
 
 def caminho_minimo_em_passos(grade: Grade) -> tuple[int, int] | None:
-    """Inundação por níveis. Devolve (passos, custo desse caminho)."""
     inicio = grade.inicio
     fila = deque([inicio])
     anterior: dict[Estado, Estado | None] = {inicio: None}
@@ -52,7 +32,6 @@ def caminho_minimo_em_passos(grade: Grade) -> tuple[int, int] | None:
 
 
 def caminho_minimo_em_custo(grade: Grade) -> tuple[int, int] | None:
-    """Dijkstra de conferência. Devolve (passos, custo)."""
     inicio = grade.inicio
     melhor: dict[Estado, int] = {inicio: 0}
     anterior: dict[Estado, Estado | None] = {inicio: None}

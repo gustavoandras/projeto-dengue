@@ -1,32 +1,3 @@
-"""
-Busca em Largura (BFS) — busca sem informação.
-
-Ideia
------
-Explora o espaço de estados por NÍVEIS: primeiro todos os estados a 1
-movimento da origem, depois todos a 2 movimentos, e assim por diante.
-
-Estrutura de dados
-------------------
-FILA (FIFO), implementada com collections.deque. É a fila que garante a
-ordem por níveis: o primeiro a entrar é o primeiro a sair.
-
-Tratamento de estados visitados
--------------------------------
-Um dicionário `anterior` faz dois papéis ao mesmo tempo: guarda o pai de
-cada estado (para reconstruir o caminho no final) e serve como conjunto
-de visitados. Um estado entra nele no momento em que é GERADO, não
-quando é expandido — isso evita que o mesmo estado entre na fila duas
-vezes.
-
-Otimalidade
------------
-BFS encontra o caminho com o MENOR NÚMERO DE PASSOS. Não encontra
-necessariamente o de menor CUSTO, porque ignora completamente os pesos
-das arestas. O Cenário 3 foi desenhado justamente para expor essa
-diferença.
-"""
-
 from __future__ import annotations
 
 from collections import deque
@@ -47,7 +18,7 @@ def buscar(grade: Grade) -> Resultado:
     anterior: dict[Estado, Estado | None] = {inicio: None}
 
     expandidos = 0
-    gerados = 1                      # o estado inicial conta como gerado
+    gerados = 1
     fronteira_maxima = 1
     ordem: list[Estado] = []
 
@@ -56,8 +27,6 @@ def buscar(grade: Grade) -> Resultado:
         expandidos += 1
         ordem.append(atual)
 
-        # Teste de objetivo na EXPANSÃO, para manter o critério idêntico
-        # ao dos outros três algoritmos e tornar as métricas comparáveis.
         if grade.eh_objetivo(atual):
             caminho = reconstruir_caminho(anterior, atual)
             return Resultado(

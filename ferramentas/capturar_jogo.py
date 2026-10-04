@@ -1,14 +1,3 @@
-"""
-Teste de fumaça do jogo, sem janela.
-
-Executa uma missão completa de ponta a ponta — seleção de cenário, foco
-e algoritmo, movimentação do usuário, animação do agente, tela de
-resultado — e salva capturas de cada etapa. Também exercita os botões
-clicáveis, simulando cliques nas coordenadas que o próprio jogo gerou.
-
-Uso:  python -m ferramentas.capturar_jogo
-"""
-
 from __future__ import annotations
 
 import os
@@ -21,9 +10,9 @@ sys.path.insert(0, str(RAIZ))
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
-import pygame  # noqa: E402
+import pygame
 
-import main as jogo_principal  # noqa: E402
+import main as jogo_principal
 
 DESTINO = RAIZ / "resultados" / "capturas"
 TAMANHO = (1440, 860)
@@ -34,8 +23,7 @@ def _tecla(jogo, chave) -> None:
 
 
 def _clicar(jogo, identificador) -> None:
-    """Clica no botão com o identificador dado, usando o rect real."""
-    jogo.desenhar()          # garante que os botões do quadro existem
+    jogo.desenhar()
     for botao in jogo.botoes.itens:
         if botao.identificador == identificador:
             jogo.tratar_evento(pygame.event.Event(
@@ -75,14 +63,12 @@ def executar() -> None:
 
     jogo = jogo_principal.Jogo(tamanho=TAMANHO)
 
-    # --- 1. seleção: tudo por clique --------------------------------------
     _clicar(jogo, ("cenario", 2))
     assert jogo.cenario.numero == 3, "clique no cenário não funcionou"
 
     _clicar(jogo, ("algoritmo", "A*"))
     assert jogo.algoritmo == "A*"
 
-    # troca de foco pelo botão, depois volta clicando no mapa
     focos_do_cenario = [p for p, _ in jogo.grade.focos_ordenados()]
     outro = next(p for p in focos_do_cenario if p != jogo.grade.objetivo)
     _clicar(jogo, ("foco", outro))
@@ -96,7 +82,6 @@ def executar() -> None:
     jogo.tempo = 0.52
     _salvar(jogo, "jogo_1_selecao.png")
 
-    # --- 2. missão pelo botão INICIAR -------------------------------------
     _clicar(jogo, ("iniciar",))
     assert jogo.estado is jogo_principal.Estado.MISSAO
     print(f"  busca: {jogo.resultado_busca}")
@@ -107,7 +92,6 @@ def executar() -> None:
         jogo.jogador.mover(1, 0)
     _salvar(jogo, "jogo_2_explorando.png")
 
-    # --- 3. agente percorrendo --------------------------------------------
     for _ in range(150):
         jogo.atualizar(1 / 60)
     for _ in range(6):
@@ -116,7 +100,6 @@ def executar() -> None:
         jogo.jogador.mover(0, 1)
     _salvar(jogo, "jogo_3_percorrendo.png")
 
-    # --- 4. ambos chegam ao foco ------------------------------------------
     caminho = jogo.resultado_busca.caminho
     jogo.jogador.posicao = jogo.grade.inicio
     jogo.jogador.caminho = [jogo.grade.inicio]
@@ -133,7 +116,6 @@ def executar() -> None:
     print(f"  chegou primeiro: {jogo.ordem_chegada[0]}")
     _salvar(jogo, "jogo_4_resultado.png")
 
-    # --- 5. registro da execução manual -----------------------------------
     arquivo = jogo_principal.ARQUIVO_EXECUCOES
     assert arquivo.exists(), "execução do usuário não foi registrada"
     linhas = arquivo.read_text(encoding="utf-8").strip().splitlines()
@@ -141,7 +123,6 @@ def executar() -> None:
     print(f"  registro: {linhas[1][:76]}…")
     arquivo.unlink()
 
-    # --- 6. redimensionamento ---------------------------------------------
     for tamanho in ((1024, 640), (1920, 1080), TAMANHO):
         jogo.tratar_evento(pygame.event.Event(
             pygame.VIDEORESIZE, w=tamanho[0], h=tamanho[1], size=tamanho
@@ -149,8 +130,7 @@ def executar() -> None:
         jogo.desenhar()
     print(f"  redimensionamento: ok em {len(3 * [0])} tamanhos")
 
-    # --- 7. todos os cenários e focos na tela de seleção ------------------
-    _clicar(jogo, ("reiniciar",))       # sai da tela de resultado
+    _clicar(jogo, ("reiniciar",))
     assert jogo.estado is jogo_principal.Estado.SELECAO, jogo.estado
     for indice in range(3):
         _clicar(jogo, ("cenario", indice))
@@ -158,7 +138,7 @@ def executar() -> None:
             _clicar(jogo, ("foco", posicao))
             assert jogo.grade.objetivo == posicao
             jogo.desenhar()
-        # volta ao foco padrão e guarda a captura do cenário
+
         padrao_do_cenario = next(
             p for p, t in jogo.grade.focos_ordenados()
             if t.codigo == jogo.cenario.foco_padrao
@@ -170,7 +150,6 @@ def executar() -> None:
 
     pygame.quit()
     print("\nTeste de fumaça concluído sem erros.")
-
 
 if __name__ == "__main__":
     executar()

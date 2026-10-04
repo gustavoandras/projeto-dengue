@@ -1,25 +1,3 @@
-"""
-Renderização do ambiente em Pygame, em estilo PIXEL ART.
-
-Tudo aqui é apenas DESENHO. Nenhum algoritmo de busca passa por este
-módulo — essa separação é o que permite medir o tempo do algoritmo
-separadamente do tempo da animação (item 2.4.3 do edital).
-
-Como o pixel art é feito
-------------------------
-Cada célula é desenhada numa grade lógica de 12x12 "pixels grandes" e
-depois ampliada por um fator INTEIRO. É o fator inteiro que garante
-pixels perfeitamente quadrados: ampliar 12 px por 2,4x deixaria umas
-colunas com 2 px e outras com 3, e o resultado ficaria irregular.
-
-Por isso `definir_area` não usa o tamanho de célula bruto que caberia na
-tela: ele arredonda para baixo até o múltiplo de 12 mais próximo.
-
-Nada é carregado de arquivo. Os sprites são mapas de caracteres
-declarados no fim do módulo, o que os deixa fáceis de editar: cada
-caractere é um pixel e a paleta diz qual cor ele representa.
-"""
-
 from __future__ import annotations
 
 import pygame
@@ -29,23 +7,19 @@ from core.grade import Estado, Grade
 
 from . import tema
 
-# Lado da grade lógica de cada célula, em pixels de arte.
+
 TAM_LOGICO = 12
 
-# Cache de superfícies já construídas: evita redesenhar pixel a pixel
-# a cada quadro. A chave inclui a escala, porque redimensionar a janela
-# exige sprites novos.
+
 _CACHE: dict[tuple, pygame.Surface] = {}
 
 
 def _ruido(linha: int, coluna: int, semente: int = 0) -> int:
-    """Pseudo-aleatório determinístico: mesma célula, mesma variação."""
     valor = (linha * 73_856_093) ^ (coluna * 19_349_663) ^ (semente * 83_492_791)
     return (valor >> 8) & 0xFFFF
 
 
 def _ampliar(superficie: pygame.Surface, escala: int) -> pygame.Surface:
-    """Amplia por fator inteiro sem suavizar — pixels continuam quadrados."""
     if escala == 1:
         return superficie
     return pygame.transform.scale(
@@ -55,7 +29,6 @@ def _ampliar(superficie: pygame.Surface, escala: int) -> pygame.Surface:
 
 
 def _montar_sprite(mapa: tuple[str, ...], paleta: dict[str, tuple]) -> pygame.Surface:
-    """Constrói uma superfície 12x12 a partir de um mapa de caracteres."""
     superficie = pygame.Surface((TAM_LOGICO, TAM_LOGICO), pygame.SRCALPHA)
     for y, linha in enumerate(mapa):
         for x, caractere in enumerate(linha):
@@ -72,12 +45,7 @@ def _sprite(chave: tuple, mapa, paleta, escala: int) -> pygame.Surface:
     return _CACHE[completa]
 
 
-# ---------------------------------------------------------------------------
-# Tiles de terreno
-# ---------------------------------------------------------------------------
-
 def _tile_terreno(codigo: str, variante: int) -> pygame.Surface:
-    """Desenha o tile 12x12 de um tipo de terreno, com pequena variação."""
     superficie = pygame.Surface((TAM_LOGICO, TAM_LOGICO))
     base = tema.cor_terreno(codigo)
     superficie.fill(base)
@@ -95,7 +63,6 @@ def _tile_terreno(codigo: str, variante: int) -> pygame.Surface:
 
 
 def _pixels_calcada(superficie, variante) -> None:
-    """Lajota clara com rejunte nas bordas e algumas manchas."""
     rejunte = (178, 182, 190)
     for i in range(TAM_LOGICO):
         superficie.set_at((i, TAM_LOGICO - 1), rejunte)
@@ -112,7 +79,6 @@ def _pixels_calcada(superficie, variante) -> None:
 
 
 def _pixels_grama(superficie, variante) -> None:
-    """Tufos de capim: traços verticais escuros e claros."""
     escuro = (74, 138, 60)
     claro = (138, 202, 112)
     tufos = (
@@ -130,7 +96,6 @@ def _pixels_grama(superficie, variante) -> None:
 
 
 def _pixels_terra(superficie, variante) -> None:
-    """Terra batida: pedrinhas escuras e poeira clara."""
     pedra = (132, 90, 54)
     poeira = (196, 152, 108)
     grupos = (
@@ -148,7 +113,6 @@ def _pixels_terra(superficie, variante) -> None:
 
 
 def _pixels_muro(superficie, variante) -> None:
-    """Tijolos aparentes: argamassa horizontal e juntas alternadas."""
     argamassa = (40, 34, 31)
     realce = (74, 64, 58)
     for y in (0, 6):
@@ -164,25 +128,13 @@ def _pixels_muro(superficie, variante) -> None:
         superficie.set_at((x, 7), realce)
 
 
-# ---------------------------------------------------------------------------
-# Desenhista
-# ---------------------------------------------------------------------------
-
 class DesenhistaGrade:
-    """Desenha uma grade dentro de um retângulo da tela."""
 
     def __init__(self, grade: Grade, retangulo: pygame.Rect):
         self.grade = grade
         self.definir_area(retangulo)
 
     def definir_area(self, retangulo: pygame.Rect) -> None:
-        """
-        Calcula o tamanho da célula para a grade caber na área dada.
-
-        O tamanho é arredondado para um MÚLTIPLO de TAM_LOGICO, para que
-        a ampliação dos sprites use fator inteiro e os pixels da arte
-        fiquem quadrados.
-        """
         bruto = min(
             retangulo.width // self.grade.colunas,
             retangulo.height // self.grade.linhas,
@@ -196,8 +148,6 @@ class DesenhistaGrade:
         self.origem_y = retangulo.y + (retangulo.height - altura) // 2
         self.rect = pygame.Rect(self.origem_x, self.origem_y, largura, altura)
 
-    # -- conversões --------------------------------------------------------
-
     def retangulo_da_celula(self, linha: int, coluna: int) -> pygame.Rect:
         return pygame.Rect(
             self.origem_x + coluna * self.lado,
@@ -210,20 +160,17 @@ class DesenhistaGrade:
         return r.centerx, r.centery
 
     def celula_em(self, posicao) -> Estado | None:
-        """Converte uma coordenada de tela em (linha, coluna), se houver."""
         x, y = posicao
         if not self.rect.collidepoint(posicao):
             return None
         return ((y - self.origem_y) // self.lado,
                 (x - self.origem_x) // self.lado)
 
-    # -- terreno -----------------------------------------------------------
-
     def desenhar_terreno(self, tela: pygame.Surface) -> None:
         for linha in range(self.grade.linhas):
             for coluna in range(self.grade.colunas):
                 codigo = self.grade.matriz[linha][coluna].codigo
-                # focos e início ficam sobre calçada
+
                 if codigo not in tema.COR_DETALHE:
                     codigo = celulas.CALCADA.codigo
                 variante = _ruido(linha, coluna) % 4
@@ -239,10 +186,7 @@ class DesenhistaGrade:
 
         pygame.draw.rect(tela, tema.BORDA_PAINEL, self.rect, width=2)
 
-    # -- sobreposições -----------------------------------------------------
-
     def desenhar_sobreposicao(self, tela, estados, cor_rgba) -> None:
-        """Pinta um conjunto de células com cor semitransparente."""
         if not estados:
             return
         camada = pygame.Surface((self.lado, self.lado), pygame.SRCALPHA)
@@ -251,17 +195,10 @@ class DesenhistaGrade:
             tela.blit(camada, self.retangulo_da_celula(linha, coluna).topleft)
 
     def desenhar_trilha(self, tela, estados, cor_rgba, espessura=0.34) -> None:
-        """
-        Liga células consecutivas com blocos retangulares.
-
-        Retângulos em vez de linhas: como os movimentos são sempre
-        ortogonais, os blocos ficam alinhados à grade de pixels e o
-        caminho continua parecendo pixel art.
-        """
         if len(estados) < 2:
             return
         grossura = max(2, int(self.lado * espessura))
-        grossura -= grossura % max(1, self.escala)   # múltiplo da escala
+        grossura -= grossura % max(1, self.escala)
         camada = pygame.Surface((self.rect.width, self.rect.height),
                                 pygame.SRCALPHA)
 
@@ -281,10 +218,7 @@ class DesenhistaGrade:
 
         tela.blit(camada, self.rect.topleft)
 
-    # -- marcadores --------------------------------------------------------
-
     def desenhar_inicio(self, tela) -> None:
-        """Marca discreta de onde a missão começa."""
         linha, coluna = self.grade.inicio
         sprite = _sprite(
             ("inicio",), SPRITE_INICIO,
@@ -294,7 +228,6 @@ class DesenhistaGrade:
 
     def desenhar_focos(self, tela, pulso: float,
                        realcar_selecao: bool = True) -> None:
-        """Desenha todos os focos; o selecionado ganha halo pulsante."""
         for posicao, tipo in self.grade.focos_ordenados():
             selecionado = (posicao == self.grade.objetivo) and realcar_selecao
             self._desenhar_foco(tela, posicao, tipo.codigo, selecionado, pulso)
@@ -322,17 +255,10 @@ class DesenhistaGrade:
         tela.blit(sprite, rect.topleft)
 
     def desenhar_personagem(self, tela, linha, coluna, papel: str) -> None:
-        """`papel` é "usuario" (pessoa) ou "agente" (robô)."""
         mapa, paleta = SPRITES_PERSONAGEM[papel]
         sprite = _sprite(("personagem", papel), mapa, paleta, self.escala)
         tela.blit(sprite, self.retangulo_da_celula(linha, coluna).topleft)
 
-
-# ---------------------------------------------------------------------------
-# Sprites — cada caractere é um pixel; '.' é transparente
-# ---------------------------------------------------------------------------
-
-# Marca do ponto de partida: quatro cantos, sem tapar o personagem.
 SPRITE_INICIO = (
     "............",
     ".mm......mm.",
@@ -348,7 +274,6 @@ SPRITE_INICIO = (
     "............",
 )
 
-# Usuário: uma pessoa (agente de saúde de camiseta azul).
 SPRITE_USUARIO = (
     "....hhhh....",
     "...hhhhhh...",
@@ -364,7 +289,6 @@ SPRITE_USUARIO = (
     "..ddd..ddd..",
 )
 
-# Agente inteligente: um robozinho, para contrastar com a pessoa.
 SPRITE_AGENTE = (
     ".....aa.....",
     ".....aa.....",
@@ -382,24 +306,24 @@ SPRITE_AGENTE = (
 
 SPRITES_PERSONAGEM = {
     "usuario": (SPRITE_USUARIO, {
-        "h": (92, 62, 40),       # cabelo
-        "s": (232, 190, 152),    # pele
-        "o": (40, 40, 52),       # olhos
-        "m": (150, 90, 80),      # boca
-        "b": tema.COR_USUARIO,   # camiseta
-        "d": (46, 62, 96),       # calça
+        "h": (92, 62, 40),
+        "s": (232, 190, 152),
+        "o": (40, 40, 52),
+        "m": (150, 90, 80),
+        "b": tema.COR_USUARIO,
+        "d": (46, 62, 96),
     }),
     "agente": (SPRITE_AGENTE, {
-        "a": (168, 176, 190),    # antena
-        "r": tema.COR_AGENTE,    # corpo
-        "w": (226, 242, 255),    # visor
-        "m": (110, 30, 28),      # boca
-        "g": (120, 126, 138),    # pés
+        "a": (168, 176, 190),
+        "r": tema.COR_AGENTE,
+        "w": (226, 242, 255),
+        "m": (110, 30, 28),
+        "g": (120, 126, 138),
     }),
 }
 
 SPRITES_FOCO = {
-    # Pneu: anel escuro com água empoçada no meio.
+
     "P": (
         "............",
         "...dddddd...",
@@ -414,7 +338,7 @@ SPRITES_FOCO = {
         "...dddddd...",
         "............",
     ),
-    # Vaso de planta sobre pratinho com água.
+
     "V": (
         "............",
         "............",
@@ -429,7 +353,7 @@ SPRITES_FOCO = {
         "............",
         "............",
     ),
-    # Caixa d'água ABERTA: sem tampa, água à mostra.
+
     "C": (
         "............",
         "...cccccc...",
@@ -444,7 +368,7 @@ SPRITES_FOCO = {
         "............",
         "............",
     ),
-    # Garrafa de boca para cima.
+
     "R": (
         "............",
         ".....cc.....",
@@ -459,7 +383,7 @@ SPRITES_FOCO = {
         "............",
         "............",
     ),
-    # Balde virado para cima, mais estreito embaixo.
+
     "B": (
         "............",
         "............",
@@ -474,7 +398,7 @@ SPRITES_FOCO = {
         "............",
         "............",
     ),
-    # Calha horizontal entupida.
+
     "L": (
         "............",
         "............",

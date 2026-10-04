@@ -1,26 +1,3 @@
-"""
-Animação do agente inteligente.
-
-PONTO CENTRAL DO ITEM 2.4.3 DO EDITAL
--------------------------------------
-A busca já terminou antes de esta classe existir. O algoritmo roda de uma
-vez só, em microssegundos, e devolve um Resultado contendo:
-
-  - `ordem_exploracao`: os estados na ordem em que foram expandidos;
-  - `caminho`: a solução encontrada.
-
-Esta classe apenas REPRODUZ essas duas listas ao longo do tempo. O
-`tempo_busca` gravado no Resultado é o tempo do algoritmo; o tempo que a
-animação leva na tela não é medido nem reportado como desempenho.
-
-Fases
------
-  1. EXPLORANDO — revela progressivamente os estados expandidos, para o
-     usuário ver o algoritmo "pensando";
-  2. PERCORRENDO — o agente caminha pela solução encontrada;
-  3. CONCLUIDO — chegou ao foco.
-"""
-
 from __future__ import annotations
 
 from enum import Enum, auto
@@ -36,11 +13,9 @@ class Fase(Enum):
 
 
 class AnimacaoAgente:
-    """Reproduz visualmente um Resultado já calculado."""
 
-    # Ritmo da animação. Só afeta a apresentação, nunca as métricas.
-    ESTADOS_POR_SEGUNDO = 140.0     # revelação dos estados explorados
-    PASSOS_POR_SEGUNDO = 7.0        # caminhada do agente
+    ESTADOS_POR_SEGUNDO = 140.0
+    PASSOS_POR_SEGUNDO = 7.0
 
     def __init__(self, resultado: Resultado, grade):
         self.resultado = resultado
@@ -49,8 +24,6 @@ class AnimacaoAgente:
         self._explorados_revelados = 0.0
         self._passo_atual = 0.0
         self.posicao = grade.inicio
-
-    # -- consulta ----------------------------------------------------------
 
     @property
     def estados_revelados(self) -> list[Estado]:
@@ -70,14 +43,11 @@ class AnimacaoAgente:
 
     @property
     def custo_parcial(self) -> int:
-        """Custo acumulado até onde o agente já caminhou."""
         return self.grade.custo_do_caminho(self.caminho_percorrido)
 
     @property
     def chegou(self) -> bool:
         return self.fase is Fase.CONCLUIDO
-
-    # -- atualização -------------------------------------------------------
 
     def atualizar(self, dt: float) -> None:
         if self.fase is Fase.EXPLORANDO:
@@ -98,7 +68,6 @@ class AnimacaoAgente:
             self.posicao = self.resultado.caminho[int(self._passo_atual)]
 
     def concluir_imediatamente(self) -> None:
-        """Pula a animação (tecla de atalho durante a demonstração)."""
         self._explorados_revelados = len(self.resultado.ordem_exploracao)
         if self.resultado.encontrou:
             self._passo_atual = len(self.resultado.caminho) - 1
